@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="fr">
+<!-- 
+Ah cool vous voulez voir comment a été réalisée cette présentation ! 
+
+Bonne initiative !
+
+Elle utilise une librairie javascript open-source qui s'appelle impress.js, inspirée des présentations que propose Prezi. 
+
+Impress.js est basé sur les nouvelles fonctionnalités de CSS3, et notamment transform, transition et les animations 3D. Mais du coup la présentation ne fonctionne pas forcément sur les anciennes versions des principaux navigateurs, ni sur certaines versions actuelles. Mais les browser supports évoluent et devraient inévitablement guarantir une belle présentation en utilisant impress.js.
+
+La démo officielle de la librairie se trouve ici : http://bartaz.github.io/impress.js 
+et le code source ici : https://github.com/bartaz/impress.js
+
+On trouvera également plusieurs exemples ici : https://github.com/bartaz/impress.js/wiki/Examples-and-demos.
+
+Notons avant de commencer que si impress.js est très bon pour faire des présentations originales, il est aussi beaucoup utilisé pour proposer des navigations dynamiques pour des sites web et des portfolios !
+-->
+
+
+<!-- 
+Première surprise - ou non -, notre présentation n'est ni plus ni moins qu'une page html, avec sa structure classique :
+
+	<!DOCTYPE html>
+	<html lang="fr">
+		<head>
+			<title>Ma belle présentation</title>
+		</head>
+		<body>
+
+		</body>
+	</html>
+
+On ajoute seulement, pour l'instant, à cette structure classique, juste avant la fermeture du body (</body>), l'appel à la librairie Impress.js, et son déclenchement une fois qu'elle est chargée :
+
+	<script src="js/impress.js"></script>
+	<script>impress().init();</script>
+
+ -->
+
+<head>
+	<meta charset="utf-8">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<title>L'Internet des Objets</title>
+	<meta name="author" content="Thibault Mahe, Laetitia Pot, Corinne Sainte-Colombe">
+	<meta name="description" content="Un exposé introductif à l'Internet des Objets et son impact sur l'architecture de l'information">
+<!-- N'oublions pas non plus de charger notre fichier css, comme pour une page web classique. -->
+	<link href="style.css" rel="stylesheet">
+</head>
+
+<body class="impress-not-supported">
+
+<!-- Impress.js est tellement parfait qu'il assure lui-même un "check support" (ligne 167 de la librairie). Il vérifie si le navigateur supporte le CSS3 3D transform notamment, et si ce n'est pas le cas il ajoute la classe "impress-not-supported" à l'élement body et display le message suivant (fallback). Si le browser support est suffisant, il remplace cette classe par la classe "impress-supported" qui signifie seulement que impress.js peut tourner. 
+
+Il est utile de mettre par défaut cette classe "impress-not-supported" comme c'est le cas ici puisque certains désactivent javascript. Si c'est le cas, le fallback s'affichera par défaut également. Si ce n'est pas le cas, le javascript enlèvera la classe de toute façon. -->
+	<div id="fallback-message">
+		Arf ! Votre navigateur est trop vieux pour faire fonctionner cette présentation. Pardon, cette présentation est trop jeune pour fonctionner sur votre navigateur expérimenté.<br /> Il pourrait être intéressant pour vous d'essayer le nouveau <a href="http://www.google.com/chrome/" target="_blank">Chrome</a>, qu'en pensez-vous ?
+	</div>
+<!-- Le "hint" est encore en dehors des diapos et propose d'afficher un message afin d'indiquer à l'utilisateur que la navigation est originale et s'apparente à celle d'un diaporama. Ce bandeau est proposé sur le github du créateur d'impress.js, mais il ne dépend pas de la librairie. Aussi son comportement est-il définit dans le css : la ligne 101 définit l'animation et précise que le bandeau n'est visible que pour la première diapo ("title").
+
+Le petit script se situant en dessous n'est vraiment pas un exemple de bonnes pratiques. On se demande ce qu'il fait là, au milieu du contenu, à manipuler du contenu qui devrait lui aussi figurer dans le corps du html. Mais on pourra fermer les yeux pour cette fois, il ne s'agit que de changer le contenu du hint pour les tablettes et mobiles qui n'utilisent pas de touches directionnelles ou de barre d'espace.
+-->
+	<div id="hint">
+		<p>Utiliser la barre d'espace ou les touches directionnelles pour naviguer</p>
+	</div>
+	<script>
+		if ('ontouchstart' in document.documentElement) {
+		  document.querySelector('.hint').innerHTML = '<p>
+		  Faites glissez vos magnifiques doigts vers la droite ou vers la gauche pour naviguer</p>';
+		}
+	</script>
+<!-- Le diaporama correspond à une div (ou n'importe quelle balise) avec pour identifiant "impress", qui enveloppe toutes les diapos.
+Chaque diapo est également une div (ou, encore une fois, n'importe quelle balise) ayant plusieurs attributs :
+	- un id correspondant au nom de la diapo (pour l'identifier dans l'URL, mais ce n'est pas obligatoire, même si c'est très pratique pour le css)
+	- des coordonées (position)
+	- une classe "step" qui permet à impress.js de comprendre que cette div correspond à une diapo.
+Chaque slide est en fait positionnée dans un espace 3D (x, y, z). L'animation  d'une slide à l'autre correspond seulement au déplacement de l'une vers l'autre. Si par exemple deux slides sont positionnées dans l'espace au même endroit, avec un décalage horizontal de 1000px entre elles, la transition entre les deux diapos sera une simple translation.
+Les trois principaux attributs de positionnement sont ainsi :
+	- data-x : abscisse (x)
+	- data-y : ordonnée (y)
+	- data-z : cote (z)
+Ils définissent ensemble les coordonnées du centre de la slide.
+Et parce que ce n'est pas suffisant pour des utilisateurs exigeants, impress.js propose également 5 autres data properties :
+	- data-scale : pour redimensionner la diapo en fonction de ce facteur, par exemple 0.5 pour que la diapo soit deux fois plus petites que les autres (ou du moins celle dont le scale est à 1 ; 2 pour que ce soit multiplié par deux, etc. Cela permet de créer des effets de zoom et de dézoom notamment.
+	- data-rotate : rotation de la slide selon l'angle spécifié
+	- data-rotate-x : rotation 3D autour de l'axe x
+	- data-rotate-y : rotation 3D autour de l'axe y
+	- data-rotate-z : rotation autour de l'axe z, mais là je ne vois pas l'intérêt puisque c'est logiquement la même chose que data-rotate...
+Essayons de voir plus bas ce que ca donne.
+ -->
+	<div id="impress">
+
+<!-- 
+La première slide s'appelle "title" et a été ajouté après coup. C'est pourquoi elle ne se situe pas en (0, 0, 0). Mais de manière générale la position de la première slide importe peu, il faut surtout voir la cohérence / l'esthétique de l'ensemble. Ici un data-z a été ajouté afin que la slide soit au-dessus de la suivante : le passage de l'une à l'autre permet d'apporter l'impression que l'on entre dans le diaporama, comme on rentre dans le sujet. Par ailleurs deux effets 3D ont été ajouté (rotate-x et rotate-y). Le diaporama est en effet infini, la dernière page revient à la première, il était donc possible de penser une jolie transition entre ces deux diapos.
+-->
+		<div id="title" data-x='500' data-z='500' data-rotate='60' data-rotate-x='-15' data-rotate-y='15' class="step">
+<!-- Le contenu de la diapo est tout simplement du contenu balisé (html) et positionné (css).-->	
+			<div class="chrome">Best with <a href="http://www.google.com/chrome/" target="_blank">Chrome or Mozilla Firefox</a></div>
+			
+			<a href="#"><h1>L'Internet des </br><span class="objet">OBJETS</span></h1></a>
+			<div class="subtitle">
+				Quels imaginaires ? Quelle place pour l'architecte de l'information ?
+			</div>
+		</div>
+
+<!-- 
+La seconde slide est positionné à 90°, il y aura donc un mouvement de rotation entre la précédente et celle-ci, avec un effet de zoom.
+-->
+		<div id="plan" data-x='0' data-y='0' data-rotate='90' data-scale='0.25' class="step">
+			<ul>
+				<li class="titre"> Définition </li>
+				<li>Au programme : de la continuité, de la confusion, de l'histoire...</li>
+				<li class="titre">Comment l'Internet des objets peut-il évoluer ?</li>
+				<li>Au programme : de la joie, de la crainte, du réalisme...</li>
+				<li class="titre">Quelle place pour l'architecte de l'information ? </li>
+				<li>Au programme : du nouveau, de l'ancien, du pratique...</li>
+			</ul>
+		</div>
+
+<!-- 
+Toutes les autres diapos ne sont finalement qu'un jeu pour tester les différentes valeurs des data-properties.
+Evidemment une présentation moins anarchique est possible, sous la forme d'une grille par exemple, où la caméra ne se déplacerait que verticalement et horizontalement...
+C'est ici que l'imagination intervient.
+-->
+
+		<div id="definition" data-x='-810' data-y='0' data-rotate='90' data-scale='0.25' class="step">
+			<table> 
+				<caption> Vers les "4 webs"</caption> 
+				<tr> 
+					<th></th> 
+					<th> Description </th> 
+					<th> Technologies </th> 
+				</tr> 
+				<tr> 
+					<th> Web 1.0 puis 1.5 </th> 
+					<td> Interconnexion de pages html. </td> 
+					<td> HTML, HTTP, puis ajout de langages. </td> 
+				</tr>
+				<tr> 
+					<th> Web 2.0 </th> 
+					<td> Interconnexion d'utilisateurs.</td> 
+					<td> Mêmes protocoles et standards. Quelques ajouts : blogs, social bookmarking, social tagging, wikis, podcasts, flux rss, CMS, Ajax... </td> 
+				</tr> 
+				<tr> 
+					<th> Web 3.0 </th> 
+					<td> Interconnexion des données.</td> 
+					<td> Mêmes protocoles et standards. Quelques ajouts : URI, XML, RDF, OWL, SparQL... </td> 
+				</tr> 
+				<tr> 
+					<th> Web of things </th> 
+					<td> Interconnexion des objets.</td> 
+					<td> Mêmes protocoles et standards. Quelques rares ajouts : REST...</td> 
+				</tr> 
+			</table> 
+		</div>
+
+
+		<div id="schema-iot" data-x='-4000' data-y='1200' data-scale='0.5' class="step">
+			<img src="img/adam-nu.png" alt="Création d'Adam pour illustrer l'IoT"/>
+			<p>Source image : Musée du Vatican online.</p>
+
+		</div>
+
+
+		<div id="things" data-x='-2800' data-y='1200' data-scale='0.5' class="step">
+			<img src="img/adam-things.png" alt="Création d'Adam pour illustrer l'IoT"/>
+		</div>
+
+
+		<div id="virtuel" data-x='-1988' data-y='1200' data-scale='0.5' class="step">
+			<img src="img/adam-reel.png" alt="Création d'Adam pour illustrer l'IoT"/>
+		</div>
+
+
+		<div id="middleware" data-x='-1176' data-y='1200' data-scale='0.5' class="step">
+			<img src="img/adam-middleware.png" alt="Création d'Adam pour illustrer l'IoT"/>
+		</div>
+
+
+		<div id="schema-classic" data-x='-200' data-y='1200' data-scale='0.5' class="step">
+			<figure>
+				<img src="img/schema-classique-couleur.png" alt="Schéma"/>
+				<figcaption>
+					<a href="http://carolninap.files.wordpress.com/2012/05/2012-eswc-web-of-things.pdf" target="_blank"> Source : SensorLab, Carolina Fortuna et Marko Grobelnik </a>
+				</figcaption>
+			</figure>
+				 
+		</div>
+
+		<div id="historic" data-x='-200' data-y='3200' data-scale='0.5' class="step">
+			<img src="img/historique.png" alt="Historique de l'Internet des objets"/>
+		</div>
+
+
+		<div id="scenarios" data-z='-200px' data-x='0' data-y='2200' data-scale='0.25' class="step">
+			<div class="titre">Le futur de l'Internet des objets ?</div>
+		</div>
+
+
+		<div id="scenario1" data-x='-2800' data-y='-1200' data-scale='0.5' class="step">
+			<img src="img/scenario-optimiste.png" alt="Scénario optmiste"/>
+		</div>
+
+
+		<div id="scenario2" data-x='-1988' data-y='-1200' data-scale='0.5' class="step">
+			<img src="img/scenario-pessimiste.png" alt="Scénario pessimiste"/>
+		</div>
+
+
+		<div id="scenario3" data-x='-1176' data-y='-1200' data-scale='0.5' class="step">
+			<img src="img/scenario-realiste.png" alt="Scénario réaliste"/>
+		</div>
+
+
+		<div id="architecture" data-x='-770' data-y='1500' data-z='100' data-rotate-x='-75' data-scale='0.25' class="step">
+			<div class="titre">Quelle place pour l'Architecte de l'Information ?</div>
+		</div>
+
+
+		<div id="ergonomie" data-x='-364' data-y='2400' data-z='2000' data-scale='0.5' class="step">
+			<img src="img/archidufutur.jpg" alt="L'architecte de l'information du futur"/>
+			<p>Source image : istockphoto.com, libre de droit</p>
+		</div>
+
+
+		<div id="controle" data-x='42' data-y='1500' data-z='100' data-rotate-x='-75' data-scale='0.25' class="step">
+			<div>
+				<img src="img/autocars2.png" alt="illustration de la question du controle de l'IoT"/>
+				<p>Source image : Newsweek Magazine, 17/12/1956</p>
+			</div>
+		</div>
+
+
+		<div id="accessibilite" data-x='648' data-y='1200' data-scale='0.5' class="step">
+			<img src="img/scenario_blind.png" alt="Scénario UX accessibilité"/>
+			<p>Source image : Louis Coetzee et Guillaume Olivrin, "Inclusion Through the Internet of Things", CSIR Meraka Institute, South Africa</p>
+		</div>
+
+
+		<div id="conclusion" data-x='1460' data-y='1200' data-scale='0.5' class="step">
+			<p class="titre"> Conclusion </p>
+			<ul>
+				<li> Des objets interconnectés (Internet) ou seulement connectés (Web) ?</li>
+				<li> L'Internet des Objets, c'est du software, du hardware, mais surtout du "middleware". </li>
+				<li> Des imaginaires entre expérimentation et répulsion, attirance et réticence. </li>
+				<li> Vers un marché de la confiance et un Internet des Gadgets ? </li>
+				<li> L'architecte ergonome et administrateur du réel. </li>
+				<li> Impress.js </li>	
+			</ul>	
+		</div>
+
+
+		<div id="sources" data-x='2272' data-y='1200' data-scale='0.5' class="step">
+			<p class="titre"> Bibliographie & Webographie </p>
+			<ul>
+				<li> <span class="auteur">BENGHOZI, Pierre-Jean, BUREAU, Sylvain et MASSIT-FOLLÉA, Françoise</span>, <span class="italic">L’Internet des objets : Quels enjeux pour l’Europe. Nouvelle édition</span>, Paris, Éditions de la Maison des sciences de l’homme, 2009, <a href="http://books.openedition.org/editionsmsh/78">[en ligne]</a>.</li>
+				<li> <span class="auteur"> BENHAMOU, Bernard </span>, <span  class="italic">L’internet des objets : Défis technologiques, économiques et politiques</span>, Esprit, n° 3-4, 2009, p. 137-150, <a href="http://www.cairn.info/resume.php?ID_ARTICLE=ESPRI_0903_0137">[en ligne]</a>.</li>
+				<li> <span class="auteur">KESSOUS, Emmanuel</span>, <span  class="italic">Quand les objets deviennent communicants La mise en confiance des acteurs humains et la question des traces numériques</span>, Annales des Télécommunications, vol.62, 2007, p. 1192-1206, <a href= "?????">[en ligne] </a> </li>
+				<li> <span class="auteur">GUILLAUD, Hubert</span>, <span  class="italic">De l’internet des objets au web des objets</span>, 26/09/2013, <a href="http://www.internetactu.net/2013/09/26/de-linternet-des-objets-au-web-des-objets-2/">[en ligne] </a>.</li>
+				<li> <span class="auteur">FORTUNA Carolina, GROBELNIK, Marko</span>, <span  class="italic">The Web of Things</span>, SensorLab, 2012, <a href="http://carolninap.files.wordpress.com/2012/05/2012-eswc-web-of-things.pdf">[en ligne]</a>. </li>
+				<li> <span class="auteur"> GUINARD, Dominique, TRIFA, Vlad</span>, <span  class="italic">Toward the Web of Things : Web Mashups for spanbedded devices</span>, 2009, <a href="http://integror.net/mspan2009/papers/paper4.pdf">[en ligne]</a>.</li>
+				<li> <span class="auteur"> ASHTON, Kevin</span>, <span  class="italic">The "Internet of Things" Thing</span>, 2009, <a href="http://rfidjournal.com/articles/view?4986">[en ligne]</a>.</li>
+				<li> The <a href="https://liris.cnrs.fr/asawoo/doku.php">ASAWoO Project</a></li>	
+			</ul>		
+		</div>
+
+		<div id="merci" data-x='750' data-y='1800' data-z='450' data-scale='0.2' data-rotate-x='-60' data-rotate-y='45' class="step">
+			<h2>Merci de votre écoute !</h2>
+			<p>Cette présentation utilise <a href="http://bartaz.github.com/impress.js/" target="_blank">impress.js</a></p>
+			<p>Le code est expliqué dans le fichier source.</p>
+		</div>
+
+	</div>
+	<!-- <script src="http://code.jquery.com/jquery-latest.js"></script> -->
+	<script src="js/jquery-1.10.2.min.js"></script>
+	<!--
+	Pour utilisez impress.js, il n'est pas nécessaire de connaitre javascript, ni jquery. Cependant, si vous utilisez jquery, attention à la manière de charger la librairie. Si vous la chargez depuis son site internet, comme c'est le cas ici, n'oubliez pas que vous devrez avoir une connection internet lors de la présentation...
+	 -->
+	<script src="js/impress.js"></script>
+	<!--
+	Le plugin javascript screenfull.js nous permet de compléter une petite (l'unique ?) lacune d'impress.js : l'absence de mode pleine écran. Ce qui est quand même pratique pour une présentation !
+	 -->
+	<script src="js/screenfull.js"></script>
+	<script>
+		impress().init();
+
+		var target = $('html')[0];
+		$('#title a').click(function () {
+		    if (screenfull.enabled) {
+		        screenfull.request(target);
+		    }
+		});
+	</script>
+</body>
+
+<!-- 
+Au début de la présentation, chaque diapo (.step) se voit ajouter dynamiquement par le javascript (donc nous visible ici) une classe "future". Quand la "caméra" arrive sur la diapo, elle remplace cette classe par une classe "present". Le fait qu'une telle classe existe uniquement quand la slide est visionnée permet notamment de créer des effets d'animation démarrant en même temps que la diapo. Une fois la diapo passée, la classe "present" est supprimée et remplacée par la classe "past".
+
+C'est avec une technique similaire que nous avons pu afficher le hint plus haut. Quand une diapo est visionnée, elle obtient la classe "active" et l'élément body possède systématiquement une classe basée sur l'id de la diapo "active", et nommée "impress-on-ID" (avec l'ID = nom de l'id de la diapo active). Ainsi, cela permet de n'afficher le hint que sur la première diapo, et uniquement quand celle-ci est visionnée, en définissant ce comportement dans le css en utilisant la classe "impress-on-title". Bien d'autres choses peuvent être faites, comme changer de background selon la diapo par exemple.
+
+Par contre, et ca c'est sans doute l'élément le plus important pour maîtriser impress.js, comme le précise son créateur Bartek Szopka : "Impress.js may not help you, if you have nothing interesting to say"
+-->
+
+</html>
